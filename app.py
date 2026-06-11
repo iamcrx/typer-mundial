@@ -923,14 +923,21 @@ def admin():
         <h2>Uczestnicy i linki</h2>
 
         {% for p in participants %}
-        <div style="margin-bottom:14px">
-            <strong>{{ p.name }}</strong>
-            <div class="copy-row">
-                <input class="copy-input" id="link_{{ p.id }}" readonly value="{{ base_url }}/player/{{ p.token }}">
-                <button type="button" onclick="copyText('link_{{ p.id }}')">Kopiuj link</button>
-            </div>
-        </div>
-        {% endfor %}
+<div style="margin-bottom:14px">
+    <strong>{{ p.name }}</strong>
+
+    <div class="copy-row">
+        <input class="copy-input" id="link_{{ p.id }}" readonly value="{{ base_url }}/player/{{ p.token }}">
+        <button type="button" onclick="copyText('link_{{ p.id }}')">Kopiuj link</button>
+    </div>
+
+    <div style="margin-top:6px">
+        <a href="{{ url_for('admin_edit_long_terms', participant_id=p.id, key=key) }}">
+            Edytuj typy długoterminowe
+        </a>
+    </div>
+</div>
+{% endfor %}
     </div>
 
     <form method="post">
@@ -1118,6 +1125,160 @@ def export_csv():
         out.getvalue().encode("utf-8-sig"),
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=typer_mundial_export.csv"},
+    )
+
+@app.route("/admin/long-terms/<int:participant_id>", methods=["GET", "POST"])
+def admin_edit_long_terms(participant_id):
+    init_db()
+
+    key = request.args.get("key") or request.form.get("key") or ""
+
+    if key != ADMIN_KEY:
+        return "Brak dostępu.", 403
+
+    conn = connect()
+
+    participant = conn.execute(
+        "SELECT * FROM participants WHERE id = ?",
+        (participant_id,),
+    ).fetchone()
+
+    if not participant:
+        conn.close()
+        return "Nie znaleziono uczestnika.", 404
+
+    if request.method == "POST":
+        conn.execute(
+            """INSERT INTO long_terms
+            (participant_id, champion, runner_up, third_place, golden_boot, golden_glove)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(participant_id) DO UPDATE SET
+                champion=excluded.champion,
+                runner_up=excluded.runner_up,
+                third_place=excluded.third_place,
+                golden_boot=excluded.golden_boot,
+                golden_glove=excluded.golden_glove""",
+            (
+                participant_id,
+                request.form.get("champion", ""),
+                request.form.get("runner_up", ""),
+                request.form.get("third_place", ""),
+                request.form.get("golden_boot", "").strip(),
+                request.form.get("golden_glove", "").strip(),
+            ),
+        )
+
+        conn.commit()
+        conn.close()
+
+        recalculate_all_points()
+
+        return redirect(url_for("admin", key=key))
+
+    long_term_row = conn.execute(
+        "SELECT * FROM long_terms WHERE participant_id = ?",
+        (participant_id,),
+    ).fetchone()
+
+    conn.close()
+
+    if long_term_row:
+        long_term = dict(long_term_row)
+    else:
+        long_term = {
+            "champion": "",
+            "runner_up": "",
+            "third_place": "",
+            "golden_boot": "",
+            "golden_glove": "",
+        }
+
+    team_options = sorted(
+        [(code, team_label(code)) for code in TEAMS],
+        key=lambda x: x[1],
+    )
+
+    body = """
+    <div class="topnav">
+        <a href="{{ url_for('admin', key=key) }}">Powrót do admina</a>
+        <a href="{{ url_for('ranking') }}">Ranking</a>
+    </div>
+
+    <h1>Edytuj typy długoterminowe</h1>
+
+    <div class="card">
+        <h2>{{ participant.name }}</h2>
+        <p class="info">
+            Ten formularz działa tylko dla admina. Możesz wpisać albo poprawić typy długoterminowe uczestnika nawet po deadline.
+        </p>
+    </div>
+
+    <form method="post">
+        <input type="hidden" name="key" value="{{ key }}">
+
+        <div class="card">
+            <div class="grid2">
+                <label>
+                    Mistrz świata – 15 pkt<br>
+                    <select name="champion">
+                        <option value="">-- wybierz --</option>
+                        {% for code,label in team_options %}
+                        <option value="{{ code }}" {% if long_term.champion == code %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Wicemistrz świata – 10 pkt<br>
+                    <select name="runner_up">
+                        <option value="">-- wybierz --</option>
+                        {% for code,label in team_options %}
+                        <option value="{{ code }}" {% if long_term.runner_up == code %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    3. miejsce – 10 pkt<br>
+                    <select name="third_place">
+                        <option value="">-- wybierz --</option>
+                        {% for code,label in team_options %}
+                        <option value="{{ code }}" {% if long_term.third_place == code %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Król strzelców – 10 pkt<br>
+                    <input name="golden_boot" value="{{ long_term.golden_boot or '' }}">
+                </label>
+
+                <label>
+                    Złota rękawica – 10 pkt<br>
+                    <input name="golden_glove" value="{{ long_term.golden_glove or '' }}">
+                </label>
+            </div>
+        </div>
+
+        <div class="sticky-save">
+            <button type="submit">Zapisz typy uczestnika</button>
+        </div>
+    </form>
+    """
+
+    return render_page(
+        "Edycja typów długoterminowych",
+        body,
+        key=key,
+        participant=participant,
+        long_term=long_term,
+        team_options=team_options,
     )
 
 if __name__ == "__main__":
