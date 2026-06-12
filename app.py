@@ -700,7 +700,7 @@ def player_details(token):
         conn.close()
         return "Nie znaleziono uczestnika.", 404
 
-    rows = conn.execute(
+    rows_raw = conn.execute(
         """SELECT
             m.*,
             pr.home_goals,
@@ -715,6 +715,12 @@ def player_details(token):
 
     conn.close()
 
+    rows = []
+    for r in rows_raw:
+        rd = dict(r)
+        rd["locked"] = is_match_locked(r)
+        rows.append(rd)
+
     body = """
     <div class="topnav">
         <a href="{{ url_for('ranking') }}">Ranking</a>
@@ -722,6 +728,13 @@ def player_details(token):
     </div>
 
     <h1>Szczegóły: {{ p.name }}</h1>
+
+    <div class="card">
+        <p class="info">
+            Typy są widoczne dopiero po rozpoczęciu danego meczu.
+            Przed startem meczu są ukryte, żeby nikt nie mógł sugerować się cudzymi typami.
+        </p>
+    </div>
 
     <div class="card table-wrap">
         <table class="table">
@@ -736,44 +749,46 @@ def player_details(token):
             {% for r in rows %}
             <tr>
                 <td>{{ r.match_date }} {{ r.match_time }}</td>
+
                 <td>{{ teams[r.home_code][0] }} – {{ teams[r.away_code][0] }}</td>
+
                 <td>
-    {% if r.home_goals is not none %}
-    {{ r.home_goals }}:{{ r.away_goals }}
-    {% if r.is_auto %}<span class="auto-badge">AUTO</span>{% endif %}
-    {% else %}
-    -
-    {% endif %}
-</td>
-                <td>
-                    {% if r.home_score is not none %}
-                    {{ r.home_score }}:{{ r.away_score }}
+                    {% if r.locked %}
+                        {% if r.home_goals is not none %}
+                            {{ r.home_goals }}:{{ r.away_goals }}
+                            {% if r.is_auto %}
+                                <span class="auto-badge">AUTO</span>
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
                     {% else %}
-                    -
+                        <span class="locked">ukryte do startu meczu</span>
                     {% endif %}
                 </td>
-               <td>
-    {% if r.home_goals is not none %}
-    {{ r.home_goals }}:{{ r.away_goals }}
-    {% if r.is_auto %}<span class="auto-badge">AUTO</span>{% endif %}
-    {% else %}
-    -
-    {% endif %}
-</td>
+
+                <td>
+                    {% if r.home_score is not none %}
+                        {{ r.home_score }}:{{ r.away_score }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if r.locked %}
+                        {{ r.points if r.points is not none else '-' }}
+                    {% else %}
+                        <span class="locked">ukryte</span>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </table>
     </div>
     """
 
-    return render_page(
-    "Szczegóły",
-    body,
-    p=p,
-    rows=rows,
-    teams=TEAMS,
-    is_match_locked=is_match_locked,
-)
+    return render_page("Szczegóły", body, p=p, rows=rows, teams=TEAMS)
 
 @app.route("/picks")
 def picks():
