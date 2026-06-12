@@ -738,13 +738,13 @@ def player_details(token):
                 <td>{{ r.match_date }} {{ r.match_time }}</td>
                 <td>{{ teams[r.home_code][0] }} – {{ teams[r.away_code][0] }}</td>
                 <td>
-                    {% if r.home_goals is not none %}
-                    {{ r.home_goals }}:{{ r.away_goals }}
-                    {% if r.is_auto %}<span class="auto-badge">AUTO</span>{% endif %}
-                    {% else %}
-                    -
-                    {% endif %}
-                </td>
+    {% if r.home_goals is not none %}
+    {{ r.home_goals }}:{{ r.away_goals }}
+    {% if r.is_auto %}<span class="auto-badge">AUTO</span>{% endif %}
+    {% else %}
+    -
+    {% endif %}
+</td>
                 <td>
                     {% if r.home_score is not none %}
                     {{ r.home_score }}:{{ r.away_score }}
@@ -752,14 +752,28 @@ def player_details(token):
                     -
                     {% endif %}
                 </td>
-                <td>{{ r.points if r.points is not none else '-' }}</td>
+               <td>
+    {% if r.home_goals is not none %}
+    {{ r.home_goals }}:{{ r.away_goals }}
+    {% if r.is_auto %}<span class="auto-badge">AUTO</span>{% endif %}
+    {% else %}
+    -
+    {% endif %}
+</td>
             </tr>
             {% endfor %}
         </table>
     </div>
     """
 
-    return render_page("Szczegóły", body, p=p, rows=rows, teams=TEAMS)
+    return render_page(
+    "Szczegóły",
+    body,
+    p=p,
+    rows=rows,
+    teams=TEAMS,
+    is_match_locked=is_match_locked,
+)
 
 @app.route("/picks")
 def picks():
