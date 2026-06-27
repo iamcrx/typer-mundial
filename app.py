@@ -1291,7 +1291,7 @@ def player_playoff(token):
                                                                         </div>
 
                         <div style="margin-top:8px">
-<span class="info">Awans po dogrywce/rzutach karnych:</span><br><select
+<span class="info">Awans po dogrywce/karnych:</span><br><select
     id="ko_adv_{{ m.id }}"
     name="adv_{{ m.id }}"
     {% if m.locked or not m.home_code or not m.away_code or not pred or pred.home_goals != pred.away_goals %}disabled{% endif %}
