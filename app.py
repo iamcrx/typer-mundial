@@ -718,6 +718,7 @@ button{cursor:pointer;background:#22c55e;color:#052e16;border:none;font-weight:b
     .grid2,.copy-row{grid-template-columns:1fr}
 }
 </style>
+
 <script>
 function copyText(id){
     const el=document.getElementById(id);
@@ -725,9 +726,34 @@ function copyText(id){
     el.setSelectionRange(0,99999);
     navigator.clipboard.writeText(el.value);
 }
+
+function updateAdvancementSelect(matchId){
+    const homeInput = document.getElementById("ko_home_" + matchId);
+    const awayInput = document.getElementById("ko_away_" + matchId);
+    const advSelect = document.getElementById("ko_adv_" + matchId);
+
+    if(!homeInput || !awayInput || !advSelect){
+        return;
+    }
+
+    const homeVal = homeInput.value;
+    const awayVal = awayInput.value;
+
+    if(homeVal !== "" && awayVal !== "" && homeVal === awayVal){
+        advSelect.disabled = false;
+    } else {
+        advSelect.value = "";
+        advSelect.disabled = true;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+    document.querySelectorAll("[data-ko-match]").forEach(function(el){
+        updateAdvancementSelect(el.dataset.koMatch);
+    });
+});
 </script>
 """
-
 
 BASE = """
 <!doctype html>
@@ -1238,15 +1264,39 @@ def player_playoff(token):
 
                     <div>
                         <div class="score-box">
-                            <input type="number" min="0" max="30" name="home_{{ m.id }}" value="{{ pred.home_goals if pred else '' }}" {% if m.locked or not m.home_code or not m.away_code %}disabled{% endif %}>
-                            :
-                            <input type="number" min="0" max="30" name="away_{{ m.id }}" value="{{ pred.away_goals if pred else '' }}" {% if m.locked or not m.home_code or not m.away_code %}disabled{% endif %}>
-                        </div>
+
+                        <input
+    id="ko_home_{{ m.id }}"
+    data-ko-match="{{ m.id }}"
+    type="number"
+    min="0"
+    max="30"
+    name="home_{{ m.id }}"
+    value="{{ pred.home_goals if pred else '' }}"
+    oninput="updateAdvancementSelect('{{ m.id }}')"
+    {% if m.locked or not m.home_code or not m.away_code %}disabled{% endif %}
+>
+:
+<input
+    id="ko_away_{{ m.id }}"
+    data-ko-match="{{ m.id }}"
+    type="number"
+    min="0"
+    max="30"
+    name="away_{{ m.id }}"
+    value="{{ pred.away_goals if pred else '' }}"
+    oninput="updateAdvancementSelect('{{ m.id }}')"
+    {% if m.locked or not m.home_code or not m.away_code %}disabled{% endif %}
+>
+                                                                        </div>
 
                         <div style="margin-top:8px">
                             <span class="info">Awans po remisie:</span><br>
-                            <select name="adv_{{ m.id }}" {% if m.locked or not m.home_code or not m.away_code %}disabled{% endif %}>
-                                <option value="">-- tylko przy remisie --</option>
+<select
+    id="ko_adv_{{ m.id }}"
+    name="adv_{{ m.id }}"
+    {% if m.locked or not m.home_code or not m.away_code or not pred or pred.home_goals != pred.away_goals %}disabled{% endif %}
+>                                <option value="">-- tylko przy remisie --</option>
 
                                 {% if m.home_code %}
                                 <option value="{{ m.home_code }}" {% if pred and pred.advancing_code == m.home_code %}selected{% endif %}>
