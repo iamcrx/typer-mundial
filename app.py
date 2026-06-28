@@ -287,16 +287,53 @@ def init_db():
             "INSERT INTO matches (match_date, match_time, group_code, home_code, away_code) VALUES (?, ?, ?, ?, ?)",
             MATCHES,
         )
-
-    if cur.execute("SELECT COUNT(*) FROM knockout_matches").fetchone()[0] == 0:
-        cur.executemany(
+    for round_name, match_date, match_time, home_code, away_code, sort_order in DEFAULT_KNOCKOUT_MATCHES:
+        existing = cur.execute(
             """
-            INSERT INTO knockout_matches
-            (round_name, match_date, match_time, home_code, away_code, sort_order)
-            VALUES (?, ?, ?, ?, ?, ?)
+            SELECT id FROM knockout_matches
+            WHERE home_code = ?
+              AND away_code = ?
             """,
-            DEFAULT_KNOCKOUT_MATCHES,
-        )
+            (home_code, away_code),
+        ).fetchone()
+
+        if existing:
+            cur.execute(
+                """
+                UPDATE knockout_matches
+                SET
+                    round_name = ?,
+                    match_date = ?,
+                    match_time = ?,
+                    sort_order = ?
+                WHERE id = ?
+                """,
+                (
+                    round_name,
+                    match_date,
+                    match_time,
+                    sort_order,
+                    existing["id"],
+                ),
+            )
+        else:
+            cur.execute(
+                """
+                INSERT INTO knockout_matches
+                (round_name, match_date, match_time, home_code, away_code, sort_order)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    round_name,
+                    match_date,
+                    match_time,
+                    home_code,
+                    away_code,
+                    sort_order,
+                ),
+            )
+
+
 
     for p in cur.execute("SELECT id FROM participants WHERE token IS NULL OR token = ''").fetchall():
         cur.execute("UPDATE participants SET token = ? WHERE id = ?", (generate_token(), p["id"]))
