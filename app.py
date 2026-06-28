@@ -144,6 +144,32 @@ MATCHES = [
     ("2026-06-28", "04:00", "J", "ALG", "AUT"),
 ]
 
+DEFAULT_KNOCKOUT_MATCHES = [
+    # round_name, match_date, match_time, home_code, away_code, sort_order
+
+    ("1/16 finału", "2026-06-28", "21:00", "RSA", "CAN", 1),
+
+    ("1/16 finału", "2026-06-29", "19:00", "BRA", "JPN", 2),
+    ("1/16 finału", "2026-06-29", "22:30", "GER", "PAR", 3),
+
+    ("1/16 finału", "2026-06-30", "03:00", "NED", "MAR", 4),
+    ("1/16 finału", "2026-06-30", "19:00", "CIV", "NOR", 5),
+    ("1/16 finału", "2026-06-30", "23:00", "FRA", "SWE", 6),
+
+    ("1/16 finału", "2026-07-01", "03:00", "MEX", "ECU", 7),
+    ("1/16 finału", "2026-07-01", "18:00", "ENG", "COD", 8),
+    ("1/16 finału", "2026-07-01", "22:00", "BEL", "SEN", 9),
+
+    ("1/16 finału", "2026-07-02", "02:00", "USA", "BIH", 10),
+    ("1/16 finału", "2026-07-02", "21:00", "ESP", "AUT", 11),
+
+    ("1/16 finału", "2026-07-03", "01:00", "POR", "CRO", 12),
+    ("1/16 finału", "2026-07-03", "05:00", "SUI", "ALG", 13),
+    ("1/16 finału", "2026-07-03", "20:00", "AUS", "EGY", 14),
+
+    ("1/16 finału", "2026-07-04", "00:00", "ARG", "CPV", 15),
+    ("1/16 finału", "2026-07-04", "03:30", "COL", "GHA", 16),
+]
 
 def connect():
     conn = sqlite3.connect(DB_PATH)
@@ -260,6 +286,16 @@ def init_db():
         cur.executemany(
             "INSERT INTO matches (match_date, match_time, group_code, home_code, away_code) VALUES (?, ?, ?, ?, ?)",
             MATCHES,
+        )
+
+    if cur.execute("SELECT COUNT(*) FROM knockout_matches").fetchone()[0] == 0:
+        cur.executemany(
+            """
+            INSERT INTO knockout_matches
+            (round_name, match_date, match_time, home_code, away_code, sort_order)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            DEFAULT_KNOCKOUT_MATCHES,
         )
 
     for p in cur.execute("SELECT id FROM participants WHERE token IS NULL OR token = ''").fetchall():
