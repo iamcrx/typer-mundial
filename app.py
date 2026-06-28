@@ -2047,9 +2047,14 @@ def picks():
     matches = []
     picks_by_match = {}
 
-    for m in conn.execute("SELECT * FROM matches ORDER BY match_date, match_time, id").fetchall():
+    for m in conn.execute("""
+        SELECT *
+        FROM knockout_matches
+        ORDER BY match_date, match_time, sort_order, id
+    """).fetchall():
         md = dict(m)
-        md["locked"] = is_match_locked(m)
+        md["locked"] = is_knockout_locked(m)
+        md["time_left"] = knockout_time_left_text(m)
         matches.append(md)
 
         if md["locked"]:
@@ -2059,11 +2064,13 @@ def picks():
                     p.name,
                     pr.home_goals,
                     pr.away_goals,
+                    pr.advancing_code,
                     pr.points,
+                    pr.bonus_points,
                     pr.is_auto
                 FROM participants p
-                JOIN predictions pr ON pr.participant_id=p.id
-                WHERE pr.match_id=?
+                JOIN knockout_predictions pr ON pr.participant_id = p.id
+                WHERE pr.match_id = ?
                 ORDER BY p.name
                 """,
                 (m["id"],),
@@ -2080,53 +2087,114 @@ def picks():
         <a href="{{ url_for('admin', key='potok') }}">Admin</a>
     </div>
 
-    <h1>Typy wszystkich graczy – faza grupowa</h1>
+    <h1>Typy wszystkich graczy – faza pucharowa</h1>
 
     <div class="card">
-        <p class="info">Typy danego meczu są widoczne dopiero po rozpoczęciu tego meczu.</p>
+        <p class="info">
+            Typy danego meczu są widoczne dopiero po rozpoczęciu tego meczu.
+            W fazie pucharowej pokazujemy wynik po 90 minutach oraz wskazaną drużynę awansującą przy remisie.
+        </p>
     </div>
+
+    {% if not matches %}
+    <div class="card">
+        <p class="warning">Brak dodanych meczów fazy pucharowej.</p>
+    </div>
+    {% endif %}
 
     {% for m in matches %}
     <div class="card">
-        <h2>{{ m.match_date }} {{ m.match_time }} — {{ teams[m.home_code][0] }} – {{ teams[m.away_code][0] }}</h2>
+        <h2>
+            {{ m.match_date or '-' }} {{ m.match_time or '-' }}
+            —
+            {{ team_name(m.home_code) }} – {{ team_name(m.away_code) }}
+        </h2>
 
-        {% if not m.locked %}
-        <p class="warning">Typy ukryte do rozpoczęcia meczu.</p>
+        <p class="info">{{ m.round_name or 'Faza pucharowa' }}</p>
+
+        {% if not m.home_code or not m.away_code %}
+            <p class="warning">Mecz czeka jeszcze na ustalenie pary.</p>
+        {% elif not m.locked %}
+            <p class="warning">Typy ukryte do rozpoczęcia meczu. Pozostało: {{ m.time_left }}</p>
         {% else %}
-        <div class="table-wrap">
-            <table class="table">
-                <tr>
-                    <th>Uczestnik</th>
-                    <th>Typ</th>
-                    <th>Wynik</th>
-                    <th>Punkty</th>
-                </tr>
+            <div class="table-wrap">
+                <table class="table">
+                    <tr>
+                        <th>Uczestnik</th>
+                        <th>Typ 90'</th>
+                        <th>Awans po dogrywce/karnych</th>
+                        <th>Wynik 90'</th>
+                        <th>Awans</th>
+                        <th>Punkty</th>
+                    </tr>
 
-                {% for p in picks_by_match[m.id] %}
-                <tr>
-                    <td>{{ p.name }}</td>
-                    <td>
-                        {{ p.home_goals }}:{{ p.away_goals }}
-                        {% if p.is_auto %}<span class="auto-badge">AUTO</span>{% endif %}
-                    </td>
-                    <td>
-                        {% if m.home_score is not none %}
-                        {{ m.home_score }}:{{ m.away_score }}
-                        {% else %}
-                        -
-                        {% endif %}
-                    </td>
-                    <td>{{ p.points if p.points is not none else '-' }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
+                    {% for p in picks_by_match[m.id] %}
+                    <tr>
+                        <td>{{ p.name }}</td>
+
+                        <td>
+                            {{ p.home_goals }}:{{ p.away_goals }}
+                            {% if p.is_auto %}
+                                <span class="auto-badge">AUTO</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if p.advancing_code %}
+                                {{ team_name(p.advancing_code) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if m.home_score is not none and m.away_score is not none %}
+                                {{ m.home_score }}:{{ m.away_score }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if m.advancing_code %}
+                                {{ team_name(m.advancing_code) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if p.points is not none %}
+                                <strong>{{ (p.points or 0) + (p.bonus_points or 0) }}</strong>
+                                <br>
+                                <span class="info">
+                                    podst.: {{ p.points or 0 }},
+                                    bonus: {{ p.bonus_points or 0 }}
+                                </span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+            {% if not picks_by_match[m.id] %}
+                <p class="warning">Brak typów dla tego meczu.</p>
+            {% endif %}
         {% endif %}
     </div>
     {% endfor %}
     """
 
-    return render_page("Typy", body, matches=matches, picks_by_match=picks_by_match, teams=TEAMS)
+    return render_page(
+        "Typy fazy pucharowej",
+        body,
+        matches=matches,
+        picks_by_match=picks_by_match,
+        team_name=team_name,
+    )
 
 
 @app.route("/admin", methods=["GET", "POST"])
