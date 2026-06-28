@@ -11,6 +11,8 @@ ADMIN_KEY = os.environ.get("ADMIN_KEY", "potok")
 TZ = ZoneInfo("Europe/Warsaw")
 LONG_TERM_DEADLINE = datetime(2026, 6, 11, 21, 0, tzinfo=TZ)
 
+GROUP_STAGE_HIDDEN = True
+
 AUTO_GOALS = [0, 1, 2, 3, 4]
 AUTO_WEIGHTS = [25, 30, 25, 15, 5]
 
@@ -710,6 +712,8 @@ button{cursor:pointer;background:#22c55e;color:#052e16;border:none;font-weight:b
 .sticky-save{position:sticky;bottom:0;background:#020617;border-top:1px solid #374151;padding:16px 0;margin-top:20px}
 .copy-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
 .copy-input{width:100%;font-size:13px}
+.rules-list{margin:8px 0 0 18px;padding:0}
+.rules-list li{margin-bottom:8px}
 @media(max-width:900px){
     .container{padding:12px}
     .match{grid-template-columns:1fr}
@@ -718,7 +722,6 @@ button{cursor:pointer;background:#22c55e;color:#052e16;border:none;font-weight:b
     .grid2,.copy-row{grid-template-columns:1fr}
 }
 </style>
-
 <script>
 function copyText(id){
     const el=document.getElementById(id);
@@ -754,6 +757,7 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 </script>
 """
+
 
 BASE = """
 <!doctype html>
@@ -963,6 +967,9 @@ def index():
 
 @app.route("/player/<token>", methods=["GET", "POST"])
 def player(token):
+    if GROUP_STAGE_HIDDEN:
+        return redirect(url_for("player_playoff", token=token))
+
     init_db()
     recalculate_all_points()
 
@@ -1208,7 +1215,6 @@ def player_playoff(token):
 
     body = """
     <div class="topnav">
-        <a href="{{ url_for('player', token=participant.token) }}">Faza grupowa</a>
         <a href="{{ url_for('player_playoff', token=participant.token) }}">Faza pucharowa</a>
         <a href="{{ url_for('ranking') }}">Ranking</a>
         <a href="{{ url_for('picks') }}">Typy po starcie</a>
@@ -1219,8 +1225,8 @@ def player_playoff(token):
     <div class="card">
         <h2>{{ participant.name }}</h2>
         <p class="info">
-            Typujesz wynik po 90 minutach gry. Dogrywka i karne nie wpływają na typowany wynik.
-            Jeśli typujesz remis po 90 minutach, wskaż drużynę, która awansuje.
+            Typujesz wynik po 90 minutach gry. Dogrywka i rzuty karne nie wpływają na typowany wynik.
+            Jeśli typujesz remis po 90 minutach, wskaż drużynę, która awansuje po dogrywce lub rzutach karnych.
         </p>
     </div>
 
@@ -1230,17 +1236,116 @@ def player_playoff(token):
 
     <div class="card">
         <h2>Zasady punktacji – faza pucharowa</h2>
+
         <p class="info">
-            5 pkt – dokładny wynik po 90 minutach. 
-            2 pkt – poprawny rezultat po 90 minutach. 
-            1 pkt – poprawna różnica bramek przy nietrafionym dokładnym wyniku.
-            1 pkt – poprawnie wskazany awans po remisie.
-            Bonus: maksymalnie jeden na mecz: +10 albo +2.
+            W fazie pucharowej typujesz <strong>wynik meczu po 90 minutach gry</strong>,
+            czyli razem z doliczonym czasem. Dogrywka i rzuty karne nie zmieniają typowanego wyniku.
+        </p>
+
+        <div class="table-wrap">
+            <table class="table">
+                <tr>
+                    <th>Zdarzenie</th>
+                    <th>Punkty</th>
+                    <th>Opis</th>
+                </tr>
+
+                <tr>
+                    <td>Dokładny wynik po 90 minutach</td>
+                    <td><strong>5 pkt</strong></td>
+                    <td>
+                        Otrzymujesz 5 punktów, jeśli dokładnie trafisz wynik meczu po 90 minutach,
+                        np. typ 2:1 i wynik 2:1.
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Poprawny rezultat</td>
+                    <td><strong>2 pkt</strong></td>
+                    <td>
+                        Otrzymujesz 2 punkty, jeśli poprawnie wskażesz rezultat po 90 minutach:
+                        zwycięstwo gospodarzy, remis albo zwycięstwo gości.
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Poprawna różnica bramek</td>
+                    <td><strong>+1 pkt</strong></td>
+                    <td>
+                        Dodatkowy punkt otrzymujesz za poprawną różnicę bramek, ale tylko wtedy,
+                        gdy nie trafiłeś dokładnego wyniku. Przykład: typ 3:2, wynik 2:1.
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Awans po dogrywce/rzutach karnych</td>
+                    <td><strong>+1 pkt</strong></td>
+                    <td>
+                        Jeśli typujesz remis po 90 minutach, musisz dodatkowo wskazać drużynę,
+                        która awansuje po dogrywce lub rzutach karnych. Za poprawne wskazanie awansu
+                        otrzymujesz 1 punkt.
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>Bonus za wyjątkowy typ</h3>
+
+        <p class="info">
+            Po każdym meczu może zostać przyznany maksymalnie jeden bonus. Bonus przysługuje tylko wtedy,
+            gdy dane trafienie należy do jednego uczestnika.
+        </p>
+
+        <div class="table-wrap">
+            <table class="table">
+                <tr>
+                    <th>Priorytet</th>
+                    <th>Bonus</th>
+                    <th>Warunek</th>
+                </tr>
+
+                <tr>
+                    <td>1</td>
+                    <td><strong>+10 pkt</strong></td>
+                    <td>
+                        Tylko jeden uczestnik poprawnie wytypował zwycięską drużynę po 90 minutach
+                        albo — przy remisie — tylko jeden poprawnie wskazał drużynę awansującą.
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>2</td>
+                    <td><strong>+2 pkt</strong></td>
+                    <td>
+                        Jeżeli bonus +10 pkt nie został przyznany, a tylko jeden uczestnik poprawnie
+                        wytypował dokładny wynik po 90 minutach.
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <p class="warning">
+            Za jeden mecz można otrzymać maksymalnie jeden bonus. Bonus +10 pkt ma pierwszeństwo przed bonusem +2 pkt.
+        </p>
+
+        <h3>Przykłady</h3>
+
+        <p class="info">
+            <strong>Typ 2:1, wynik 2:1</strong> — 5 pkt za dokładny wynik.
+            <br>
+            <strong>Typ 3:1, wynik 1:0</strong> — 2 pkt za poprawny rezultat.
+            <br>
+            <strong>Typ 3:2, wynik 2:1</strong> — 3 pkt: 2 pkt za rezultat + 1 pkt za różnicę bramek.
+            <br>
+            <strong>Typ 1:1, awans Hiszpanii; wynik 1:1, awans Hiszpanii</strong> — 6 pkt:
+            5 pkt za dokładny wynik + 1 pkt za awans.
         </p>
     </div>
 
     <form method="post">
         <div class="card">
+            <h2>Mecze fazy pucharowej</h2>
+
             {% if not matches %}
                 <p class="warning">Admin nie dodał jeszcze meczów fazy pucharowej.</p>
             {% endif %}
@@ -1264,38 +1369,39 @@ def player_playoff(token):
 
                     <div>
                         <div class="score-box">
-
-                        <input
-    id="ko_home_{{ m.id }}"
-    data-ko-match="{{ m.id }}"
-    type="number"
-    min="0"
-    max="30"
-    name="home_{{ m.id }}"
-    value="{{ pred.home_goals if pred else '' }}"
-    oninput="updateAdvancementSelect('{{ m.id }}')"
-    {% if m.locked or not m.home_code or not m.away_code %}disabled{% endif %}
->
-:
-<input
-    id="ko_away_{{ m.id }}"
-    data-ko-match="{{ m.id }}"
-    type="number"
-    min="0"
-    max="30"
-    name="away_{{ m.id }}"
-    value="{{ pred.away_goals if pred else '' }}"
-    oninput="updateAdvancementSelect('{{ m.id }}')"
-    {% if m.locked or not m.home_code or not m.away_code %}disabled{% endif %}
->
-                                                                        </div>
+                            <input
+                                id="ko_home_{{ m.id }}"
+                                data-ko-match="{{ m.id }}"
+                                type="number"
+                                min="0"
+                                max="30"
+                                name="home_{{ m.id }}"
+                                value="{{ pred.home_goals if pred else '' }}"
+                                oninput="updateAdvancementSelect('{{ m.id }}')"
+                                {% if m.locked or not m.home_code or not m.away_code %}disabled{% endif %}
+                            >
+                            :
+                            <input
+                                id="ko_away_{{ m.id }}"
+                                data-ko-match="{{ m.id }}"
+                                type="number"
+                                min="0"
+                                max="30"
+                                name="away_{{ m.id }}"
+                                value="{{ pred.away_goals if pred else '' }}"
+                                oninput="updateAdvancementSelect('{{ m.id }}')"
+                                {% if m.locked or not m.home_code or not m.away_code %}disabled{% endif %}
+                            >
+                        </div>
 
                         <div style="margin-top:8px">
-<span class="info">Awans po dogrywce/karnych:</span><br><select
-    id="ko_adv_{{ m.id }}"
-    name="adv_{{ m.id }}"
-    {% if m.locked or not m.home_code or not m.away_code or not pred or pred.home_goals != pred.away_goals %}disabled{% endif %}
->                                <option value="">-- tylko przy remisie --</option>
+                            <span class="info">Awans po dogrywce/rzutach karnych:</span><br>
+                            <select
+                                id="ko_adv_{{ m.id }}"
+                                name="adv_{{ m.id }}"
+                                {% if m.locked or not m.home_code or not m.away_code or not pred or pred.home_goals != pred.away_goals %}disabled{% endif %}
+                            >
+                                <option value="">-- tylko przy remisie --</option>
 
                                 {% if m.home_code %}
                                 <option value="{{ m.home_code }}" {% if pred and pred.advancing_code == m.home_code %}selected{% endif %}>
@@ -1579,7 +1685,7 @@ def player_details(token):
                 <th>Data</th>
                 <th>Mecz</th>
                 <th>Typ 90'</th>
-                <th>Awans</th>
+                <th>Awans po dogrywce/karnych</th>
                 <th>Wynik 90'</th>
                 <th>Punkty</th>
             </tr>
@@ -1818,6 +1924,7 @@ def admin():
 
     <div class="card">
         <h2>Uczestnicy i linki</h2>
+        <p class="info">Link uczestnika prowadzi teraz bezpośrednio do fazy pucharowej.</p>
 
         {% for p in participants %}
         <div style="margin-bottom:14px">
