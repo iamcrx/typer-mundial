@@ -145,31 +145,62 @@ MATCHES = [
 ]
 
 DEFAULT_KNOCKOUT_MATCHES = [
-    # round_name, match_date, match_time, home_code, away_code, sort_order
+    # bracket_key, round_name, match_date, match_time, home_code, away_code,
+    # sort_order, next_match_key, next_slot, loser_next_match_key, loser_next_slot
 
-    ("1/16 finału", "2026-06-28", "21:00", "RSA", "CAN", 1),
+    # 1/16 finału
+    ("K01", "1/16 finału", "2026-06-29", "22:30", "GER", "PAR", 1, "R16_01", "home", "", ""),
+    ("K02", "1/16 finału", "2026-06-30", "23:00", "FRA", "SWE", 2, "R16_01", "away", "", ""),
 
-    ("1/16 finału", "2026-06-29", "19:00", "BRA", "JPN", 2),
-    ("1/16 finału", "2026-06-29", "22:30", "GER", "PAR", 3),
+    ("K03", "1/16 finału", "2026-06-28", "21:00", "RSA", "CAN", 3, "R16_02", "home", "", ""),
+    ("K04", "1/16 finału", "2026-06-30", "03:00", "NED", "MAR", 4, "R16_02", "away", "", ""),
 
-    ("1/16 finału", "2026-06-30", "03:00", "NED", "MAR", 4),
-    ("1/16 finału", "2026-06-30", "19:00", "CIV", "NOR", 5),
-    ("1/16 finału", "2026-06-30", "23:00", "FRA", "SWE", 6),
+    ("K05", "1/16 finału", "2026-07-03", "01:00", "POR", "CRO", 5, "R16_03", "home", "", ""),
+    ("K06", "1/16 finału", "2026-07-02", "21:00", "ESP", "AUT", 6, "R16_03", "away", "", ""),
 
-    ("1/16 finału", "2026-07-01", "03:00", "MEX", "ECU", 7),
-    ("1/16 finału", "2026-07-01", "18:00", "ENG", "COD", 8),
-    ("1/16 finału", "2026-07-01", "22:00", "BEL", "SEN", 9),
+    ("K07", "1/16 finału", "2026-07-02", "02:00", "USA", "BIH", 7, "R16_04", "home", "", ""),
+    ("K08", "1/16 finału", "2026-07-01", "22:00", "BEL", "SEN", 8, "R16_04", "away", "", ""),
 
-    ("1/16 finału", "2026-07-02", "02:00", "USA", "BIH", 10),
-    ("1/16 finału", "2026-07-02", "21:00", "ESP", "AUT", 11),
+    ("K09", "1/16 finału", "2026-06-29", "19:00", "BRA", "JPN", 9, "R16_05", "home", "", ""),
+    ("K10", "1/16 finału", "2026-06-30", "19:00", "CIV", "NOR", 10, "R16_05", "away", "", ""),
 
-    ("1/16 finału", "2026-07-03", "01:00", "POR", "CRO", 12),
-    ("1/16 finału", "2026-07-03", "05:00", "SUI", "ALG", 13),
-    ("1/16 finału", "2026-07-03", "20:00", "AUS", "EGY", 14),
+    ("K11", "1/16 finału", "2026-07-01", "03:00", "MEX", "ECU", 11, "R16_06", "home", "", ""),
+    ("K12", "1/16 finału", "2026-07-01", "18:00", "ENG", "COD", 12, "R16_06", "away", "", ""),
 
-    ("1/16 finału", "2026-07-04", "00:00", "ARG", "CPV", 15),
-    ("1/16 finału", "2026-07-04", "03:30", "COL", "GHA", 16),
+    ("K13", "1/16 finału", "2026-07-04", "00:00", "ARG", "CPV", 13, "R16_07", "home", "", ""),
+    ("K14", "1/16 finału", "2026-07-03", "20:00", "AUS", "EGY", 14, "R16_07", "away", "", ""),
+
+    ("K15", "1/16 finału", "2026-07-03", "05:00", "SUI", "ALG", 15, "R16_08", "home", "", ""),
+    ("K16", "1/16 finału", "2026-07-04", "03:30", "COL", "GHA", 16, "R16_08", "away", "", ""),
+
+    # 1/8 finału
+    ("R16_01", "1/8 finału", "2026-07-04", "23:00", "", "", 17, "QF_01", "home", "", ""),
+    ("R16_02", "1/8 finału", "2026-07-04", "19:00", "", "", 18, "QF_01", "away", "", ""),
+
+    ("R16_03", "1/8 finału", "2026-07-06", "21:00", "", "", 19, "QF_02", "home", "", ""),
+    ("R16_04", "1/8 finału", "2026-07-07", "02:00", "", "", 20, "QF_02", "away", "", ""),
+
+    ("R16_05", "1/8 finału", "2026-07-05", "22:00", "", "", 21, "QF_03", "home", "", ""),
+    ("R16_06", "1/8 finału", "2026-07-06", "02:00", "", "", 22, "QF_03", "away", "", ""),
+
+    ("R16_07", "1/8 finału", "2026-07-07", "18:00", "", "", 23, "QF_04", "home", "", ""),
+    ("R16_08", "1/8 finału", "2026-07-07", "22:00", "", "", 24, "QF_04", "away", "", ""),
+
+    # Ćwierćfinały
+    ("QF_01", "Ćwierćfinał", "2026-07-09", "22:00", "", "", 25, "SF_01", "home", "", ""),
+    ("QF_02", "Ćwierćfinał", "2026-07-10", "21:00", "", "", 26, "SF_01", "away", "", ""),
+    ("QF_03", "Ćwierćfinał", "2026-07-11", "23:00", "", "", 27, "SF_02", "home", "", ""),
+    ("QF_04", "Ćwierćfinał", "2026-07-12", "03:00", "", "", 28, "SF_02", "away", "", ""),
+
+    # Półfinały
+    ("SF_01", "Półfinał", "2026-07-14", "21:00", "", "", 29, "FINAL", "home", "THIRD", "home"),
+    ("SF_02", "Półfinał", "2026-07-15", "21:00", "", "", 30, "FINAL", "away", "THIRD", "away"),
+
+    # Mecz o 3. miejsce i finał
+    ("THIRD", "Mecz o 3. miejsce", "2026-07-18", "23:00", "", "", 31, "", "", "", ""),
+    ("FINAL", "Finał", "2026-07-19", "21:00", "", "", 32, "", "", "", ""),
 ]
+
 
 def connect():
     conn = sqlite3.connect(DB_PATH)
@@ -263,7 +294,12 @@ def init_db():
             home_score INTEGER,
             away_score INTEGER,
             advancing_code TEXT,
-            sort_order INTEGER DEFAULT 0
+            sort_order INTEGER DEFAULT 0,
+            bracket_key TEXT,
+            next_match_key TEXT,
+            next_slot TEXT,
+            loser_next_match_key TEXT,
+            loser_next_slot TEXT
         )
     """)
 
@@ -282,58 +318,23 @@ def init_db():
         )
     """)
 
+    for column_name in [
+        "bracket_key",
+        "next_match_key",
+        "next_slot",
+        "loser_next_match_key",
+        "loser_next_slot",
+    ]:
+        if not column_exists(conn, "knockout_matches", column_name):
+            cur.execute(f"ALTER TABLE knockout_matches ADD COLUMN {column_name} TEXT")
+
     if cur.execute("SELECT COUNT(*) FROM matches").fetchone()[0] == 0:
         cur.executemany(
             "INSERT INTO matches (match_date, match_time, group_code, home_code, away_code) VALUES (?, ?, ?, ?, ?)",
             MATCHES,
         )
-    for round_name, match_date, match_time, home_code, away_code, sort_order in DEFAULT_KNOCKOUT_MATCHES:
-        existing = cur.execute(
-            """
-            SELECT id FROM knockout_matches
-            WHERE home_code = ?
-              AND away_code = ?
-            """,
-            (home_code, away_code),
-        ).fetchone()
-
-        if existing:
-            cur.execute(
-                """
-                UPDATE knockout_matches
-                SET
-                    round_name = ?,
-                    match_date = ?,
-                    match_time = ?,
-                    sort_order = ?
-                WHERE id = ?
-                """,
-                (
-                    round_name,
-                    match_date,
-                    match_time,
-                    sort_order,
-                    existing["id"],
-                ),
-            )
-        else:
-            cur.execute(
-                """
-                INSERT INTO knockout_matches
-                (round_name, match_date, match_time, home_code, away_code, sort_order)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    round_name,
-                    match_date,
-                    match_time,
-                    home_code,
-                    away_code,
-                    sort_order,
-                ),
-            )
-
-
+    sync_default_knockout_matches(cur)
+    apply_bracket_advancements(conn)
 
     for p in cur.execute("SELECT id FROM participants WHERE token IS NULL OR token = ''").fetchall():
         cur.execute("UPDATE participants SET token = ? WHERE id = ?", (generate_token(), p["id"]))
@@ -456,6 +457,210 @@ def set_setting(conn, key, value):
         "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
         (key, value or ""),
     )
+
+
+
+def sync_default_knockout_matches(cur):
+    """Dodaje brakujące mecze drabinki i przypina ręcznie dodane pary do właściwych miejsc."""
+    for (
+        bracket_key,
+        round_name,
+        match_date,
+        match_time,
+        home_code,
+        away_code,
+        sort_order,
+        next_match_key,
+        next_slot,
+        loser_next_match_key,
+        loser_next_slot,
+    ) in DEFAULT_KNOCKOUT_MATCHES:
+        existing = cur.execute(
+            "SELECT id FROM knockout_matches WHERE bracket_key = ?",
+            (bracket_key,),
+        ).fetchone()
+
+        if not existing and home_code and away_code:
+            existing = cur.execute(
+                """
+                SELECT id FROM knockout_matches
+                WHERE (home_code = ? AND away_code = ?)
+                   OR (home_code = ? AND away_code = ?)
+                """,
+                (home_code, away_code, away_code, home_code),
+            ).fetchone()
+
+        if existing:
+            if home_code and away_code:
+                cur.execute(
+                    """
+                    UPDATE knockout_matches
+                    SET
+                        bracket_key = ?,
+                        round_name = ?,
+                        match_date = ?,
+                        match_time = ?,
+                        home_code = ?,
+                        away_code = ?,
+                        sort_order = ?,
+                        next_match_key = ?,
+                        next_slot = ?,
+                        loser_next_match_key = ?,
+                        loser_next_slot = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        bracket_key,
+                        round_name,
+                        match_date,
+                        match_time,
+                        home_code,
+                        away_code,
+                        sort_order,
+                        next_match_key,
+                        next_slot,
+                        loser_next_match_key,
+                        loser_next_slot,
+                        existing["id"],
+                    ),
+                )
+            else:
+                cur.execute(
+                    """
+                    UPDATE knockout_matches
+                    SET
+                        bracket_key = ?,
+                        round_name = ?,
+                        match_date = ?,
+                        match_time = ?,
+                        sort_order = ?,
+                        next_match_key = ?,
+                        next_slot = ?,
+                        loser_next_match_key = ?,
+                        loser_next_slot = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        bracket_key,
+                        round_name,
+                        match_date,
+                        match_time,
+                        sort_order,
+                        next_match_key,
+                        next_slot,
+                        loser_next_match_key,
+                        loser_next_slot,
+                        existing["id"],
+                    ),
+                )
+        else:
+            cur.execute(
+                """
+                INSERT INTO knockout_matches
+                (
+                    bracket_key,
+                    round_name,
+                    match_date,
+                    match_time,
+                    home_code,
+                    away_code,
+                    sort_order,
+                    next_match_key,
+                    next_slot,
+                    loser_next_match_key,
+                    loser_next_slot
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    bracket_key,
+                    round_name,
+                    match_date,
+                    match_time,
+                    home_code,
+                    away_code,
+                    sort_order,
+                    next_match_key,
+                    next_slot,
+                    loser_next_match_key,
+                    loser_next_slot,
+                ),
+            )
+
+
+def knockout_winner_loser(row):
+    """Zwraca (awansujący, odpadający) dla meczu pucharowego."""
+    home_code = row["home_code"]
+    away_code = row["away_code"]
+
+    if not home_code or not away_code:
+        return None, None
+
+    if row["home_score"] is None or row["away_score"] is None:
+        return None, None
+
+    if row["home_score"] > row["away_score"]:
+        return home_code, away_code
+
+    if row["away_score"] > row["home_score"]:
+        return away_code, home_code
+
+    advancing_code = row["advancing_code"]
+
+    if advancing_code == home_code:
+        return home_code, away_code
+
+    if advancing_code == away_code:
+        return away_code, home_code
+
+    return None, None
+
+
+def apply_bracket_advancements(conn):
+    """Uzupełnia kolejne rundy na podstawie wyników i awansujących drużyn."""
+    cur = conn.cursor()
+
+    rows = cur.execute("""
+        SELECT * FROM knockout_matches
+        WHERE bracket_key IS NOT NULL AND bracket_key != ''
+    """).fetchall()
+
+    by_key = {r["bracket_key"]: r for r in rows}
+
+    desired_slots = {}
+
+    for row in rows:
+        winner, loser = knockout_winner_loser(row)
+
+        if row["next_match_key"] and row["next_slot"]:
+            desired_slots[(row["next_match_key"], row["next_slot"])] = winner or ""
+
+        if row["loser_next_match_key"] and row["loser_next_slot"]:
+            desired_slots[(row["loser_next_match_key"], row["loser_next_slot"])] = loser or ""
+
+        # Przy zwycięstwie po 90 minutach wpisujemy awansującą drużynę także w polu awansu.
+        if winner and row["advancing_code"] != winner:
+            cur.execute(
+                "UPDATE knockout_matches SET advancing_code = ? WHERE id = ?",
+                (winner, row["id"]),
+            )
+
+    for (target_key, slot), team_code in desired_slots.items():
+        target = by_key.get(target_key)
+
+        if not target:
+            continue
+
+        if slot == "home":
+            cur.execute(
+                "UPDATE knockout_matches SET home_code = ? WHERE id = ?",
+                (team_code, target["id"]),
+            )
+        elif slot == "away":
+            cur.execute(
+                "UPDATE knockout_matches SET away_code = ? WHERE id = ?",
+                (team_code, target["id"]),
+            )
 
 
 def winner_after_90(home_goals, away_goals):
@@ -2207,6 +2412,7 @@ def admin_playoff():
                 ),
             )
 
+        apply_bracket_advancements(conn)
         conn.commit()
         saved = True
 
