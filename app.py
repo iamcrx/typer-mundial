@@ -712,7 +712,7 @@ def calc_knockout_base_points(pred_home, pred_away, pred_adv, real_home, real_aw
         if pred_result == real_result:
             points += 2
 
-        if (pred_home - pred_away) == (real_home - real_away):
+        if real_home != real_away and (pred_home - pred_away) == (real_home - real_away):
             points += 1
 
     if real_home == real_away:
